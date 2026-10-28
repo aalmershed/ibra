@@ -7,10 +7,12 @@ import { Button, EmptyState, Icon, Loading, Photo, ScreenHeader, SearchBar, Toas
 import { fetchMemberCount, fetchRestaurants } from '../../lib/api';
 import { takeFlash } from '../../lib/flash';
 import { ar } from '../../lib/format';
-import { categoryLabel, colors, radius, tintFor } from '../../lib/theme';
+import { categoryLabel, radius, tintFor } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 import type { Restaurant } from '../../lib/types';
 
 function AdminHome() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Restaurant[] | null>(null);
   const [members, setMembers] = useState<number | null>(null);
@@ -121,6 +123,7 @@ function AdminHome() {
 
 /** بطاقة رقم. إذا لها onPress تصير فلتر، وتتلوّن لما تكون مفعّلة */
 function StatBox({ label, value, active, onPress }: { label: string; value?: number; active?: boolean; onPress?: () => void }) {
+  const colors = useColors();
   return (
     <Pressable
       disabled={!onPress}

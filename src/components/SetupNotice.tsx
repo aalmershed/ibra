@@ -1,10 +1,11 @@
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
+import { useColors } from '../lib/appearance';
 import { Icon, Title, Txt } from './ui';
 
 /** تظهر لو ملف .env ما فيه بيانات Supabase */
 export function SetupNotice() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
     <ScrollView contentContainerStyle={{ padding: 24, paddingTop: insets.top + 48, gap: 16 }}>

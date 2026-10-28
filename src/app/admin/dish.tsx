@@ -8,9 +8,11 @@ import { Button, Field, Icon, IconButton, Loading, ScreenHeader, Txt } from '../
 import { deleteDish, fetchDish, saveDish, uploadImage } from '../../lib/api';
 import { toLatinDigits } from '../../lib/format';
 import { pickImages, type PickedImage } from '../../lib/pickImage';
-import { colors, radius } from '../../lib/theme';
+import { radius } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 
 function EditDish() {
+  const colors = useColors();
   const { restaurantId, dishId } = useLocalSearchParams<{ restaurantId: string; dishId?: string }>();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(!!dishId);
@@ -95,7 +97,7 @@ function EditDish() {
           accessibilityRole="button"
           accessibilityLabel={preview ? 'تغيير صورة الطبق' : 'إضافة صورة الطبق'}
           onPress={choose}
-          style={{ height: 200, borderRadius: 18, overflow: 'hidden', borderWidth: preview ? 0 : 1.5, borderStyle: 'dashed', borderColor: '#D6D0CB', backgroundColor: '#FBFAF8', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          style={{ height: 200, borderRadius: 18, overflow: 'hidden', borderWidth: preview ? 0 : 1.5, borderStyle: 'dashed', borderColor: colors.dash, backgroundColor: colors.upload, alignItems: 'center', justifyContent: 'center', gap: 6 }}
         >
           {preview ? (
             <>
@@ -129,7 +131,7 @@ function EditDish() {
               يظهر في «أطباق لازم تجربها» بالرئيسية
             </Txt>
           </View>
-          <Switch value={recommended} onValueChange={setRecommended} trackColor={{ true: colors.accent, false: '#D6D0CB' }} thumbColor={colors.white} accessibilityLabel="طبق مُوصى به" />
+          <Switch value={recommended} onValueChange={setRecommended} trackColor={{ true: colors.accentFill, false: colors.dash }} thumbColor={colors.onAccent} accessibilityLabel="طبق مُوصى به" />
         </View>
       </ScrollView>
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20, paddingTop: 14, paddingBottom: insets.bottom + 14, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.lineSoft }}>

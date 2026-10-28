@@ -4,11 +4,12 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, EmptyState, Field, ScreenHeader, Txt } from '../components/ui';
 import { useAuth } from '../lib/auth';
-import { colors } from '../lib/theme';
+import { useColors } from '../lib/appearance';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function EditProfileScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { session, profile, updateProfile } = useAuth();
   const [name, setName] = useState(profile?.full_name ?? '');

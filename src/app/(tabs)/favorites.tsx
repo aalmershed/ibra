@@ -10,10 +10,11 @@ import { useAuth } from '../../lib/auth';
 import { useFavorites } from '../../lib/favorites';
 import { distanceKm, useUserLocation } from '../../lib/location';
 import { ar } from '../../lib/format';
-import { colors } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 import type { Restaurant } from '../../lib/types';
 
 export default function FavoritesScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabBarSpace();
   const { session } = useAuth();

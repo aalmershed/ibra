@@ -4,9 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBarSpace } from '../../components/TabBar';
 import { Button, EmptyState, Icon, Title, Txt, type IconName } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
-import { colors, radius } from '../../lib/theme';
+import { radius } from '../../lib/theme';
+import { useAppearance, useColors, type AppearanceMode } from '../../lib/appearance';
 
 function Row({ icon, label, onPress, danger }: { icon: IconName; label: string; onPress: () => void; danger?: boolean }) {
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -29,7 +31,58 @@ function Row({ icon, label, onPress, danger }: { icon: IconName; label: string; 
   );
 }
 
+const MODES: { key: AppearanceMode; label: string; icon: IconName }[] = [
+  { key: 'system', label: 'تلقائي', icon: 'smartphone' },
+  { key: 'light', label: 'فاتح', icon: 'sun' },
+  { key: 'dark', label: 'داكن', icon: 'moon' },
+];
+
+/** اختيار المظهر: تلقائي (حسب الجوال) أو فاتح أو داكن */
+function AppearancePicker() {
+  const { colors, mode, setMode } = useAppearance();
+  return (
+    <View style={{ gap: 10 }}>
+      <Txt weight="semibold" size={15}>
+        المظهر
+      </Txt>
+      <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', gap: 6, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface }}>
+        {MODES.map((m) => {
+          const active = mode === m.key;
+          return (
+            <Pressable
+              key={m.key}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: active }}
+              accessibilityLabel={m.label}
+              onPress={() => setMode(m.key)}
+              style={({ pressed }) => ({
+                flex: 1,
+                height: 40,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: active ? colors.white : 'transparent',
+                borderWidth: active ? 1 : 0,
+                borderColor: colors.line,
+                opacity: pressed ? 0.75 : 1,
+              })}
+            >
+              <Icon name={m.icon} size={16} color={active ? colors.accent : colors.muted} />
+              <Txt size={14} weight={active ? 'semibold' : 'regular'} color={active ? colors.ink : colors.muted}>
+                {m.label}
+              </Txt>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export default function AccountScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabBarSpace();
   const { session, profile, isAdmin, signOut } = useAuth();
@@ -48,6 +101,9 @@ export default function AccountScreen() {
             </View>
           }
         />
+        <View style={{ paddingHorizontal: 20 }}>
+          <AppearancePicker />
+        </View>
       </View>
     );
   }
@@ -99,14 +155,14 @@ export default function AccountScreen() {
             opacity: pressed ? 0.9 : 1,
           })}
         >
-          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.inverseSoft, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="grid" color={colors.white} />
           </View>
           <View style={{ flex: 1 }}>
             <Txt weight="semibold" size={16} color={colors.white}>
               لوحة الإدارة
             </Txt>
-            <Txt size={13} color="#D6D3D1">
+            <Txt size={13} color={colors.inverseMuted}>
               أضف المطاعم والأطباق والصور
             </Txt>
           </View>
@@ -133,6 +189,8 @@ export default function AccountScreen() {
           }
         />
       </View>
+
+      <AppearancePicker />
     </ScrollView>
   );
 }

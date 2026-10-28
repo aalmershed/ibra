@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { useFavorites } from '../lib/favorites';
 import { formatDistance, formatPrice } from '../lib/format';
-import { categoryLabel, colors, radius, tintFor } from '../lib/theme';
+import { categoryLabel, radius, tintFor } from '../lib/theme';
+import { useColors } from '../lib/appearance';
 import type { DishWithRestaurant, Restaurant } from '../lib/types';
 import { HeartButton, Photo, Txt } from './ui';
 
@@ -11,6 +12,7 @@ function metaLine(r: Restaurant, km?: number | null) {
 }
 
 export function FeaturedCard({ restaurant, km, width }: { restaurant: Restaurant; km?: number | null; width: number }) {
+  const colors = useColors();
   const { isFavorite, toggle } = useFavorites();
   return (
     <Pressable
@@ -59,6 +61,7 @@ export function FeaturedCard({ restaurant, km, width }: { restaurant: Restaurant
 }
 
 export function RestaurantRow({ restaurant, km }: { restaurant: Restaurant; km?: number | null }) {
+  const colors = useColors();
   const { isFavorite, toggle } = useFavorites();
   return (
     <Pressable
@@ -84,6 +87,7 @@ export function RestaurantRow({ restaurant, km }: { restaurant: Restaurant; km?:
 }
 
 export function DishCard({ dish }: { dish: DishWithRestaurant }) {
+  const colors = useColors();
   const price = formatPrice(dish.price);
   return (
     <Pressable

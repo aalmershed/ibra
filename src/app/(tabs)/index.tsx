@@ -8,10 +8,12 @@ import { Button, Chip, EmptyState, IconButton, Loading, SearchBar, Title, Txt } 
 import { fetchRecommendedDishes, fetchRestaurants } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { distanceKm, useUserLocation } from '../../lib/location';
-import { CATEGORIES, colors } from '../../lib/theme';
+import { CATEGORIES } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 import type { DishWithRestaurant, Restaurant } from '../../lib/types';
 
 export default function HomeScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabBarSpace();
   const { width } = useWindowDimensions();

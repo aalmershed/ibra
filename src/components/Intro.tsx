@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, StyleSheet, View } from 'react-native';
-import { colors } from '../lib/theme';
+import { useColors } from '../lib/appearance';
+import { lightColors } from '../lib/theme';
 
 // المقاسات مأخوذة من صورة الشعار الأصلية (assets/splash-icon.png) بالبكسل
 const LOGO = { width: 705, height: 174 };
@@ -21,6 +22,7 @@ const s = WIDTH / LOGO.width;
  * تنزلق لمكانها والحروف تطلع ورا بعض، بعدين الشاشة تختفي ويبان التطبيق. المدة حوالي ١.٣ ثانية.
  */
 export function Intro({ onDone }: { onDone: () => void }) {
+  const colors = useColors();
   const dot = useRef(new Animated.Value(0)).current; // 0 = بالنص، 1 = مكانها في الشعار
   const dotPop = useRef(new Animated.Value(1)).current;
   const letters = useRef(LETTERS.map(() => new Animated.Value(0))).current;
@@ -94,7 +96,7 @@ export function Intro({ onDone }: { onDone: () => void }) {
               transform: [{ translateY: letters[i].interpolate({ inputRange: [0, 1], outputRange: [22, 0] }) }],
             }}
           >
-            <Image source={l.src} style={{ width: l.w * s, height: LOGO.height * s }} fadeDuration={0} />
+            <Image source={l.src} style={{ width: l.w * s, height: LOGO.height * s, tintColor: colors.ink }} fadeDuration={0} />
           </Animated.View>
         ))}
         <Animated.View
@@ -105,7 +107,8 @@ export function Intro({ onDone }: { onDone: () => void }) {
             width: DOT.size * s,
             height: DOT.size * s,
             borderRadius: (DOT.size * s) / 2,
-            backgroundColor: colors.accent,
+            // نفس لون النقطة في شاشة البداية الأصلية بالوضعين
+            backgroundColor: lightColors.accent,
             transform: [
               { translateX: dot.interpolate({ inputRange: [0, 1], outputRange: [dx, 0] }) },
               { translateY: dot.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) },

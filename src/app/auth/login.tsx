@@ -5,10 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Field, IconButton, Title, Txt } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
-import { colors } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 import { Alert } from 'react-native';
 
 export default function LoginScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');

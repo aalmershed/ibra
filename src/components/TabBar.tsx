@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { BottomFade } from './BottomFade';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, shadow } from '../lib/theme';
+import { shadow } from '../lib/theme';
+import { useColors } from '../lib/appearance';
 import { Icon, Txt, type IconName } from './ui';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
@@ -16,6 +17,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
 
 /** شريط تبويبات عائم: التبويب النشط كبسولة فيها الأيقونة والاسم */
 export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 12) + 8;
 
@@ -38,7 +40,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarPr
             alignItems: 'center',
             justifyContent: 'space-between',
             borderWidth: StyleSheet.hairlineWidth,
-            borderColor: 'rgba(28,25,23,0.08)',
+            borderColor: colors.hairline,
           },
           shadow,
         ]}
@@ -66,6 +68,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarPr
  * التبويب السابق ينكمش بنفس الوقت، فيبان كأن الكبسولة انتقلت بينهم.
  */
 function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconName; focused: boolean; onPress: () => void }) {
+  const colors = useColors();
   const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const [labelWidth, setLabelWidth] = useState(0);
@@ -100,7 +103,7 @@ function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconN
           flexDirection: 'row',
           alignItems: 'center',
           paddingHorizontal: progress.interpolate({ inputRange: [0, 1], outputRange: [15.5, 18] }),
-          backgroundColor: progress.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,241,232,0)', colors.accentSoft] }),
+          backgroundColor: progress.interpolate({ inputRange: [0, 1], outputRange: [colors.accentSoftClear, colors.accentSoft] }),
         }}
       >
         <Animated.View style={{ transform: [{ scale }] }}>

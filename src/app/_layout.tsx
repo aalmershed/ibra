@@ -17,7 +17,7 @@ import { SetupNotice } from '../components/SetupNotice';
 import { AuthProvider } from '../lib/auth';
 import { FavoritesProvider } from '../lib/favorites';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { colors } from '../lib/theme';
+import { AppearanceProvider, useAppearance } from '../lib/appearance';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -30,6 +30,15 @@ if (!I18nManager.isRTL) {
 }
 
 export default function RootLayout() {
+  return (
+    <AppearanceProvider>
+      <RootContent />
+    </AppearanceProvider>
+  );
+}
+
+function RootContent() {
+  const { colors, isDark } = useAppearance();
   const [loaded, error] = useFonts({
     IBMPlexSansArabic_400Regular,
     IBMPlexSansArabic_500Medium,
@@ -50,7 +59,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {isSupabaseConfigured ? (
         <AuthProvider>
           <FavoritesProvider>

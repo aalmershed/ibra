@@ -11,13 +11,15 @@ import { setFlash } from '../../lib/flash';
 import { formatPrice, toLatinDigits } from '../../lib/format';
 import { RIYADH, useUserLocation, type Coords } from '../../lib/location';
 import { pickImages, type PickedImage } from '../../lib/pickImage';
-import { CATEGORIES, colors, radius, tintFor } from '../../lib/theme';
+import { CATEGORIES, radius, tintFor } from '../../lib/theme';
+import { useAppearance } from '../../lib/appearance';
 import type { Dish } from '../../lib/types';
 
 type ImageItem = { kind: 'remote'; url: string } | { kind: 'local'; picked: PickedImage };
 const MAX_IMAGES = 10;
 
 function EditRestaurant() {
+  const { colors, isDark } = useAppearance();
   const { id: paramId } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
@@ -160,7 +162,7 @@ function EditRestaurant() {
             <Pressable
               accessibilityRole="button"
               onPress={addImages}
-              style={{ height: 130, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#D6D0CB', backgroundColor: '#FBFAF8', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ height: 130, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dash, backgroundColor: colors.upload, alignItems: 'center', justifyContent: 'center', gap: 6 }}
             >
               <Icon name="camera" size={28} color={colors.accent} />
               <Txt weight="semibold">ارفع صور المطعم</Txt>
@@ -192,7 +194,7 @@ function EditRestaurant() {
                   accessibilityRole="button"
                   accessibilityLabel="إضافة صور"
                   onPress={addImages}
-                  style={{ width: 110, height: 110, borderRadius: 14, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#D6D0CB', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 110, height: 110, borderRadius: 14, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dash, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Icon name="plus" color={colors.accent} />
                 </Pressable>
@@ -240,6 +242,7 @@ function EditRestaurant() {
             <MapView
               ref={mapRef}
               style={{ flex: 1 }}
+              userInterfaceStyle={isDark ? 'dark' : 'light'}
               initialRegion={{ ...center, latitudeDelta: point ? 0.01 : 0.12, longitudeDelta: point ? 0.01 : 0.12 }}
               onPress={(e) => setPoint(e.nativeEvent.coordinate)}
               toolbarEnabled={false}
@@ -259,7 +262,7 @@ function EditRestaurant() {
               يظهر في «اختيارات IBRA» بالصفحة الرئيسية
             </Txt>
           </View>
-          <Switch value={featured} onValueChange={setFeatured} trackColor={{ true: colors.accent, false: '#D6D0CB' }} thumbColor={colors.white} accessibilityLabel="مُوصى به" />
+          <Switch value={featured} onValueChange={setFeatured} trackColor={{ true: colors.accentFill, false: colors.dash }} thumbColor={colors.onAccent} accessibilityLabel="مُوصى به" />
         </View>
 
         {/* الأطباق */}
@@ -285,7 +288,7 @@ function EditRestaurant() {
                   accessibilityRole="button"
                   accessibilityLabel={`تعديل ${d.name}`}
                   onPress={() => router.push({ pathname: '/admin/dish', params: { restaurantId: id, dishId: d.id } })}
-                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 14, backgroundColor: pressed ? '#EFECE9' : colors.surface })}
+                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 14, backgroundColor: pressed ? colors.lineSoft : colors.surface })}
                 >
                   <Photo uri={d.image_url} tint={tintFor(d.id)} style={{ width: 48, height: 48, borderRadius: 10 }} iconSize={16} />
                   <Txt weight="medium" style={{ flex: 1 }} numberOfLines={1}>

@@ -17,12 +17,14 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, radius } from '../lib/theme';
+import { fonts, lightColors, radius } from '../lib/theme';
+import { useColors } from '../lib/appearance';
 
 export type IconName = ComponentProps<typeof Feather>['name'];
 
-export function Icon({ name, size = 22, color = colors.ink }: { name: IconName; size?: number; color?: string }) {
-  return <Feather name={name} size={size} color={color} />;
+export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color?: string }) {
+  const colors = useColors();
+  return <Feather name={name} size={size} color={color ?? colors.ink} />;
 }
 
 // ---------------- النصوص ----------------
@@ -32,14 +34,15 @@ type Weight = 'regular' | 'medium' | 'semibold' | 'bold' | 'display';
 export function Txt({
   weight = 'regular',
   size = 15,
-  color = colors.ink,
+  color,
   style,
   ...rest
 }: TextProps & { weight?: Weight; size?: number; color?: string }) {
+  const colors = useColors();
   return (
     <Text
       {...rest}
-      style={[{ fontFamily: fonts[weight], fontSize: size, color, lineHeight: Math.round(size * 1.5) }, style]}
+      style={[{ fontFamily: fonts[weight], fontSize: size, color: color ?? colors.ink, lineHeight: Math.round(size * 1.5) }, style]}
     />
   );
 }
@@ -75,12 +78,13 @@ export function Button({
   style?: StyleProp<ViewStyle>;
   height?: number;
 }) {
+  const colors = useColors();
   const v = {
-    primary: { bg: colors.accent, fg: colors.white, border: colors.accent },
+    primary: { bg: colors.accentFill, fg: colors.onAccent, border: colors.accentFill },
     dark: { bg: colors.ink, fg: colors.white, border: colors.ink },
     outline: { bg: colors.white, fg: colors.ink, border: colors.line },
     soft: { bg: colors.accentSoft, fg: colors.accentDark, border: colors.accentSoft },
-    danger: { bg: colors.white, fg: colors.danger, border: '#F3C7C7' },
+    danger: { bg: colors.white, fg: colors.danger, border: colors.dangerSoft },
   }[variant];
   const off = disabled || loading;
   return (
@@ -113,8 +117,8 @@ export function IconButton({
   name,
   label,
   onPress,
-  color = colors.ink,
-  bg = colors.white,
+  color,
+  bg,
   size = 44,
   bordered,
   iconSize = 20,
@@ -128,6 +132,9 @@ export function IconButton({
   bordered?: boolean;
   iconSize?: number;
 }) {
+  const colors = useColors();
+  const fg = color ?? colors.ink;
+  const background = bg ?? colors.white;
   return (
     <Pressable
       accessibilityRole="button"
@@ -139,7 +146,7 @@ export function IconButton({
           width: size,
           height: size,
           borderRadius: size >= 48 ? radius.md : size / 2,
-          backgroundColor: bg,
+          backgroundColor: background,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: bordered ? 1 : 0,
@@ -148,12 +155,13 @@ export function IconButton({
         },
       ]}
     >
-      <Icon name={name} color={color} size={iconSize} />
+      <Icon name={name} color={fg} size={iconSize} />
     </Pressable>
   );
 }
 
 export function HeartButton({ active, onPress, size = 44 }: { active: boolean; onPress: () => void; size?: number }) {
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -173,6 +181,7 @@ export function HeartButton({ active, onPress, size = 44 }: { active: boolean; o
 }
 
 export function Chip({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -180,6 +189,7 @@ export function Chip({ label, active, onPress }: { label: string; active?: boole
       onPress={onPress}
       style={({ pressed }) => [
         styles.chip,
+        { borderColor: colors.line, backgroundColor: colors.white },
         active ? { backgroundColor: colors.ink, borderColor: colors.ink } : null,
         { opacity: pressed ? 0.8 : 1 },
       ]}
@@ -194,6 +204,7 @@ export function Chip({ label, active, onPress }: { label: string; active?: boole
 // ---------------- الحقول ----------------
 
 export function Field({ label, hint, ltr, style, multiline, ...rest }: TextInputProps & { label: string; hint?: string; ltr?: boolean }) {
+  const colors = useColors();
   {
     return (
       <View style={{ gap: 6 }}>
@@ -207,6 +218,7 @@ export function Field({ label, hint, ltr, style, multiline, ...rest }: TextInput
           {...rest}
           style={[
             styles.input,
+            { borderColor: colors.inputBorder, backgroundColor: colors.white, color: colors.ink },
             multiline ? { height: 96, paddingTop: 12, textAlignVertical: 'top' } : null,
             // اتجاه الكتابة صريح لأن محاذاة الحقول ما تنقلب تلقائياً مع RTL
             { textAlign: 'right', writingDirection: ltr ? 'ltr' : 'rtl' },
@@ -224,8 +236,9 @@ export function Field({ label, hint, ltr, style, multiline, ...rest }: TextInput
 }
 
 export function SearchBar({ value, onChangeText, placeholder }: { value: string; onChangeText: (t: string) => void; placeholder: string }) {
+  const colors = useColors();
   return (
-    <View style={styles.search}>
+    <View style={[styles.search, { backgroundColor: colors.surface }]}>
       <Icon name="search" size={20} color={colors.muted} />
       <TextInput
         value={value}
@@ -254,12 +267,15 @@ export function Photo({
   style?: StyleProp<ViewStyle>;
   iconSize?: number;
 }) {
+  const colors = useColors();
+  // tintFor يرجع لون من الألوان الفاتحة، فنبدله بنظيره في الوضع الحالي
+  const background = colors.tints[lightColors.tints.indexOf(tint)] ?? tint;
   return (
-    <View style={[{ backgroundColor: tint, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, style]}>
+    <View style={[{ backgroundColor: background, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, style]}>
       {uri ? (
         <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       ) : (
-        <Icon name="image" size={iconSize} color="rgba(28,25,23,0.25)" />
+        <Icon name="image" size={iconSize} color={colors.photoIcon} />
       )}
     </View>
   );
@@ -276,6 +292,7 @@ export function Stars({
   onChange?: (n: number) => void;
   size?: number;
 }) {
+  const colors = useColors();
   return (
     <View accessibilityRole={onChange ? 'adjustable' : undefined} style={{ flexDirection: 'row', gap: 4 }}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -289,7 +306,7 @@ export function Stars({
           hitSlop={4}
           style={{ width: size + 10, height: size + 10, alignItems: 'center', justifyContent: 'center' }}
         >
-          <Text style={{ fontSize: size, lineHeight: size + 6, color: n <= value ? colors.star : '#D6D0CB' }}>★</Text>
+          <Text style={{ fontSize: size, lineHeight: size + 6, color: n <= value ? colors.star : colors.dash }}>★</Text>
         </Pressable>
       ))}
     </View>
@@ -299,9 +316,10 @@ export function Stars({
 // ---------------- عناصر الشاشة ----------------
 
 export function ScreenHeader({ title, right }: { title: string; right?: ReactNode }) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+    <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: colors.white }]}>
       <IconButton name="chevron-right" label="رجوع" bg={colors.surface} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       <Txt weight="display" size={18} numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>
         {title}
@@ -312,6 +330,7 @@ export function ScreenHeader({ title, right }: { title: string; right?: ReactNod
 }
 
 export function EmptyState({ icon, title, body, action }: { icon: IconName; title: string; body?: string; action?: ReactNode }) {
+  const colors = useColors();
   return (
     <View style={{ alignItems: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 10 }}>
       <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
@@ -334,6 +353,7 @@ export type ToastMessage = { text: string; id: number };
 
 /** إشعار صغير يطلع من تحت ويختفي لحاله بعد ثانيتين */
 export function Toast({ message, bottom }: { message: ToastMessage | null; bottom: number }) {
+  const colors = useColors();
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -374,6 +394,7 @@ export function Toast({ message, bottom }: { message: ToastMessage | null; botto
 }
 
 export function Loading() {
+  const colors = useColors();
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
       <ActivityIndicator color={colors.accent} size="large" />
@@ -396,8 +417,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -406,16 +425,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2DEDA',
-    backgroundColor: colors.white,
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.ink,
   },
   search: {
     height: 50,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -427,6 +442,5 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingBottom: 10,
-    backgroundColor: colors.white,
   },
 });

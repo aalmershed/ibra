@@ -4,9 +4,10 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, EmptyState, Field, IconButton, Title, Txt } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
-import { colors } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 
 export default function RegisterScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { signUp } = useAuth();
   const [name, setName] = useState('');

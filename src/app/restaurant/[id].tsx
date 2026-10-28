@@ -8,10 +8,12 @@ import { useAuth } from '../../lib/auth';
 import { useFavorites } from '../../lib/favorites';
 import { ar, formatDistance, formatPrice } from '../../lib/format';
 import { distanceKm, openDirections, useUserLocation } from '../../lib/location';
-import { categoryLabel, colors, tintFor } from '../../lib/theme';
+import { categoryLabel, tintFor } from '../../lib/theme';
+import { useColors } from '../../lib/appearance';
 import type { Dish, RatingStats, Restaurant } from '../../lib/types';
 
 export default function RestaurantScreen() {
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -99,7 +101,7 @@ export default function RestaurantScreen() {
           </View>
           {images.length > 1 ? (
             <View style={{ position: 'absolute', bottom: 36, end: 16, height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: 'rgba(28,25,23,0.6)', justifyContent: 'center' }}>
-              <Txt size={12} color={colors.white}>
+              <Txt size={12} color={colors.onAccent}>
                 {ar(page + 1)} / {ar(images.length)}
               </Txt>
             </View>

@@ -8,10 +8,12 @@ import { Button, Chip, Icon, IconButton, Photo, Txt } from '../../components/ui'
 import { fetchRestaurants } from '../../lib/api';
 import { formatDistance } from '../../lib/format';
 import { distanceKm, openDirections, RIYADH, useUserLocation } from '../../lib/location';
-import { CATEGORIES, categoryLabel, colors, radius, shadow, tintFor } from '../../lib/theme';
+import { CATEGORIES, categoryLabel, radius, shadow, tintFor } from '../../lib/theme';
+import { useAppearance } from '../../lib/appearance';
 import type { Restaurant } from '../../lib/types';
 
 export default function MapScreen() {
+  const { colors, isDark } = useAppearance();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabBarSpace();
   const mapRef = useRef<MapView>(null);
@@ -59,10 +61,11 @@ export default function MapScreen() {
   const km = selected && coords ? distanceKm(coords, selected) : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#EEF0EB' }}>
+    <View style={{ flex: 1, backgroundColor: colors.mapBg }}>
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
+        userInterfaceStyle={isDark ? 'dark' : 'light'}
         initialRegion={{ ...(coords ?? RIYADH), latitudeDelta: 0.15, longitudeDelta: 0.15 }}
         showsUserLocation={!!coords}
         showsMyLocationButton={false}
@@ -85,14 +88,14 @@ export default function MapScreen() {
                   width: active ? 42 : 34,
                   height: active ? 42 : 34,
                   borderRadius: 21,
-                  backgroundColor: active ? colors.accent : colors.white,
+                  backgroundColor: active ? colors.accentFill : colors.white,
                   borderWidth: active ? 3 : 2,
-                  borderColor: active ? colors.white : colors.accent,
+                  borderColor: active ? colors.onAccent : colors.accent,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Icon name={r.category === 'cafe' ? 'coffee' : 'map-pin'} size={active ? 18 : 15} color={active ? colors.white : colors.accent} />
+                <Icon name={r.category === 'cafe' ? 'coffee' : 'map-pin'} size={active ? 18 : 15} color={active ? colors.onAccent : colors.accent} />
               </View>
             </Marker>
           );
@@ -142,7 +145,7 @@ export default function MapScreen() {
             shadow,
           ]}
         >
-          <View style={{ alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#E2DEDA' }} />
+          <View style={{ alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.inputBorder }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Txt weight="display" size={17}>
               {selectedId ? 'المكان المختار' : coords ? 'الأقرب لك' : 'اقتراح لك'}
