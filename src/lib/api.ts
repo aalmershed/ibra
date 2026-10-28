@@ -41,6 +41,15 @@ export async function deleteRestaurant(id: string) {
   fail(error);
 }
 
+// ---------------- الأعضاء ----------------
+
+/** عدد الحسابات المسجلة. يشتغل للمدير بس، لأن صلاحيات profiles تسمح له يشوف الكل */
+export async function fetchMemberCount() {
+  const { count, error } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
+  fail(error);
+  return count ?? 0;
+}
+
 // ---------------- الأطباق ----------------
 
 export async function fetchDishes(restaurantId: string) {

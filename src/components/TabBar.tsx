@@ -1,6 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { useEffect, useRef, useState } from 'react';
 import { BottomFade } from './BottomFade';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, shadow } from '../lib/theme';
 import { Icon, Txt, type IconName } from './ui';
@@ -47,39 +49,82 @@ export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarPr
           const focused = state.index === index;
           const onPress = () => {
             const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+            if (!focused && !event.defaultPrevented) {
+              Haptics.selectionAsync().catch(() => {});
+              navigateToTab(route.key);
+            }
           };
-          return (
-            <Pressable
-              key={route.key}
-              accessibilityRole="tab"
-              accessibilityLabel={tab.label}
-              accessibilityState={{ selected: focused }}
-              onPress={onPress}
-              style={({ pressed }) => [
-                {
-                  height: 48,
-                  borderRadius: 24,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  opacity: pressed ? 0.7 : 1,
-                },
-                focused ? { paddingHorizontal: 18, backgroundColor: colors.accentSoft } : { width: 54 },
-              ]}
-            >
-              <Icon name={tab.icon} size={focused ? 21 : 23} color={focused ? colors.accent : colors.muted} />
-              {focused ? (
-                <Txt weight="semibold" size={14} color={colors.accent}>
-                  {tab.label}
-                </Txt>
-              ) : null}
-            </Pressable>
-          );
+          return <TabItem key={route.key} label={tab.label} icon={tab.icon} focused={focused} onPress={onPress} />;
         })}
       </View>
     </View>
+  );
+}
+
+/**
+ * زر تبويب: لما ينشط تتمدد الكبسولة ويظهر الاسم من اليمين، والأيقونة تنبض نبضة خفيفة.
+ * التبويب السابق ينكمش بنفس الوقت، فيبان كأن الكبسولة انتقلت بينهم.
+ */
+function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconName; focused: boolean; onPress: () => void }) {
+  const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const [labelWidth, setLabelWidth] = useState(0);
+  const first = useRef(true);
+
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    Animated.spring(progress, { toValue: focused ? 1 : 0, damping: 15, stiffness: 170, mass: 0.9, useNativeDriver: false }).start();
+    if (focused) {
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 0.78, duration: 90, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 3.5, tension: 170, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [focused, progress, scale]);
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: focused }}
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <Animated.View
+        style={{
+          height: 48,
+          borderRadius: 24,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: progress.interpolate({ inputRange: [0, 1], outputRange: [15.5, 18] }),
+          backgroundColor: progress.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,241,232,0)', colors.accentSoft] }),
+        }}
+      >
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Icon name={icon} size={focused ? 21 : 23} color={focused ? colors.accent : colors.muted} />
+        </Animated.View>
+        <Animated.View
+          style={{
+            overflow: 'hidden',
+            opacity: progress.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.4, 1], extrapolate: 'clamp' }),
+            width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, labelWidth + 8], extrapolateLeft: 'clamp' }),
+          }}
+        >
+          <Txt weight="semibold" size={14} color={colors.accent} numberOfLines={1} style={{ width: labelWidth, marginStart: 8 }}>
+            {label}
+          </Txt>
+        </Animated.View>
+      </Animated.View>
+      {/* نقيس عرض الاسم مرة وحدة عشان نعرف لوين تتمدد الكبسولة */}
+      <View pointerEvents="none" aria-hidden importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', width: 240, opacity: 0, alignItems: 'flex-start' }}>
+        <Txt weight="semibold" size={14} numberOfLines={1} onLayout={(e) => setLabelWidth(Math.ceil(e.nativeEvent.layout.width))}>
+          {label}
+        </Txt>
+      </View>
+    </Pressable>
   );
 }
 

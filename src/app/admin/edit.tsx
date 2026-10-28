@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutAnimation, Platform, Pressable, ScrollView, Switch, View, type ScrollViewInstance } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminGuard } from '../../components/AdminGuard';
@@ -20,6 +20,10 @@ function EditRestaurant() {
   const { id: paramId } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const dishesY = useRef(0);
+  // مطعم جديد: الخطوة الأولى تحفظ البيانات الأساسية وتنقلك للأطباق، والثانية تنشره
+  const isNew = !paramId;
   const { coords: myCoords, refresh: refreshMyLocation } = useUserLocation();
 
   const [id, setId] = useState<string | undefined>(paramId);
@@ -104,8 +108,14 @@ function EditRestaurant() {
       });
       setImages(urls.map((url) => ({ kind: 'remote', url })));
       if (!id) {
+        // بدون رسالة: نفتح قسم الأطباق وننزل له بهدوء
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setId(saved.id);
-        Alert.alert('تم النشر 🎉', 'انضاف المطعم. تقدر الحين تضيف أطباقه الموصى بها تحت.');
+        setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(dishesY.current - 12, 0), animated: true }), 350);
+      } else if (isNew) {
+        Alert.alert('تم النشر 🎉', dishes.length ? 'انضاف المطعم وأطباقه، وصار يظهر في التطبيق.' : 'انضاف المطعم، وصار يظهر في التطبيق.', [
+          { text: 'تمام', onPress: () => router.back() },
+        ]);
       } else {
         Alert.alert('تم الحفظ', 'انحفظت التعديلات.');
       }
@@ -139,8 +149,8 @@ function EditRestaurant() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.white }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScreenHeader title={id ? 'تعديل المطعم' : 'إضافة مطعم'} right={id ? <IconButton name="trash-2" label="حذف المطعم" color={colors.danger} bg={colors.surface} onPress={remove} /> : null} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 120, gap: 18 }} keyboardShouldPersistTaps="handled">
+      <ScreenHeader title={isNew ? 'إضافة مطعم' : 'تعديل المطعم'} right={id ? <IconButton name="trash-2" label="حذف المطعم" color={colors.danger} bg={colors.surface} onPress={remove} /> : null} />
+      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 120, gap: 18 }} keyboardShouldPersistTaps="handled">
         {/* الصور */}
         <View style={{ gap: 10 }}>
           <Txt weight="medium" size={14}>
@@ -253,14 +263,22 @@ function EditRestaurant() {
         </View>
 
         {/* الأطباق */}
-        <View style={{ gap: 12, paddingTop: 6 }}>
+        <View style={{ gap: 12, paddingTop: 6 }} onLayout={(e) => (dishesY.current = e.nativeEvent.layout.y)}>
           <Title size={18}>الأطباق الموصى بها</Title>
           {!id ? (
             <Txt size={14} color={colors.muted}>
-              احفظ المطعم أولاً، بعدين تقدر تضيف أطباقه.
+              كمّل البيانات الأساسية واضغط «التالي»، وبعدها تضيف الأطباق هنا.
             </Txt>
           ) : (
             <>
+              {isNew ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: 12 }}>
+                  <Icon name="check-circle" size={20} color={colors.accent} />
+                  <Txt size={13} color={colors.accentDark} style={{ flex: 1 }}>
+                    انحفظت البيانات الأساسية. أضف الأطباق الموصى بها، وبعدين اضغط «نشر المطعم».
+                  </Txt>
+                </View>
+              ) : null}
               {dishes.map((d) => (
                 <Pressable
                   key={d.id}
@@ -288,7 +306,7 @@ function EditRestaurant() {
       </ScrollView>
 
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20, paddingTop: 14, paddingBottom: insets.bottom + 14, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.lineSoft }}>
-        <Button title={id ? 'حفظ التعديلات' : 'نشر المطعم'} onPress={save} loading={saving} height={54} />
+        <Button title={!id ? 'التالي: الأطباق' : isNew ? 'نشر المطعم' : 'حفظ التعديلات'} onPress={save} loading={saving} height={54} />
       </View>
     </KeyboardAvoidingView>
   );

@@ -207,7 +207,8 @@ export function Field({ label, hint, ltr, style, multiline, ...rest }: TextInput
           style={[
             styles.input,
             multiline ? { height: 96, paddingTop: 12, textAlignVertical: 'top' } : null,
-            ltr ? { writingDirection: 'ltr' } : null,
+            // اتجاه الكتابة صريح لأن محاذاة الحقول ما تنقلب تلقائياً مع RTL
+            { textAlign: 'right', writingDirection: ltr ? 'ltr' : 'rtl' },
             style,
           ]}
         />
@@ -232,7 +233,7 @@ export function SearchBar({ value, onChangeText, placeholder }: { value: string;
         placeholderTextColor={colors.placeholder}
         accessibilityLabel="بحث"
         returnKeyType="search"
-        style={{ flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, paddingVertical: 0 }}
+        style={{ flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, paddingVertical: 0, textAlign: 'right', writingDirection: 'rtl' }}
       />
       {value ? <IconButton name="x" label="مسح البحث" size={32} bg="transparent" iconSize={18} color={colors.muted} onPress={() => onChangeText('')} /> : null}
     </View>

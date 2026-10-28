@@ -4,7 +4,7 @@ import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminGuard } from '../../components/AdminGuard';
 import { Button, EmptyState, Icon, Loading, Photo, ScreenHeader, SearchBar, Txt } from '../../components/ui';
-import { fetchRestaurants } from '../../lib/api';
+import { fetchMemberCount, fetchRestaurants } from '../../lib/api';
 import { ar } from '../../lib/format';
 import { categoryLabel, colors, radius, tintFor } from '../../lib/theme';
 import type { Restaurant } from '../../lib/types';
@@ -12,10 +12,13 @@ import type { Restaurant } from '../../lib/types';
 function AdminHome() {
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Restaurant[] | null>(null);
+  const [members, setMembers] = useState<number | null>(null);
   const [search, setSearch] = useState('');
+  const [featuredOnly, setFeaturedOnly] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    fetchMemberCount().then(setMembers).catch(() => {});
     try {
       setItems(await fetchRestaurants());
     } catch {
@@ -31,9 +34,10 @@ function AdminHome() {
 
   const filtered = useMemo(() => {
     const t = search.trim();
-    if (!t) return items ?? [];
-    return (items ?? []).filter((r) => [r.name, r.cuisine, r.district].some((v) => v?.includes(t)));
-  }, [items, search]);
+    return (items ?? []).filter(
+      (r) => (!featuredOnly || r.is_featured) && (!t || [r.name, r.cuisine, r.district].some((v) => v?.includes(t))),
+    );
+  }, [items, search, featuredOnly]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
@@ -56,22 +60,9 @@ function AdminHome() {
         ListHeaderComponent={
           <View style={{ gap: 14, paddingTop: 6, paddingBottom: 4 }}>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14 }}>
-                <Txt size={13} color={colors.muted}>
-                  المطاعم
-                </Txt>
-                <Txt weight="display" size={24}>
-                  {ar(items?.length ?? 0)}
-                </Txt>
-              </View>
-              <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: 14 }}>
-                <Txt size={13} color={colors.muted}>
-                  المُوصى بها
-                </Txt>
-                <Txt weight="display" size={24}>
-                  {ar(items?.filter((r) => r.is_featured).length ?? 0)}
-                </Txt>
-              </View>
+              <StatBox label="المطاعم" value={items?.length} active={!featuredOnly} onPress={() => setFeaturedOnly(false)} />
+              <StatBox label="المُوصى بها" value={items?.filter((r) => r.is_featured).length} active={featuredOnly} onPress={() => setFeaturedOnly((v) => !v)} />
+              <StatBox label="الأعضاء" value={members ?? undefined} />
             </View>
             {(items?.length ?? 0) > 0 ? <SearchBar value={search} onChangeText={setSearch} placeholder="ابحث في المطاعم" /> : null}
           </View>
@@ -80,7 +71,11 @@ function AdminHome() {
           items === null ? (
             <Loading />
           ) : (
-            <EmptyState icon="plus-circle" title={search ? 'ما فيه نتائج' : 'ابدأ بإضافة أول مطعم'} body={search ? undefined : 'أضف المطاعم والكافيهات مع صورها وموقعها وأطباقها المميزة.'} />
+            <EmptyState
+              icon={featuredOnly && !search ? 'star' : 'plus-circle'}
+              title={search ? 'ما فيه نتائج' : featuredOnly ? 'ما فيه مطاعم موصى بها' : 'ابدأ بإضافة أول مطعم'}
+              body={search ? undefined : featuredOnly ? 'فعّل «مُوصى به من IBRA» داخل صفحة المطعم.' : 'أضف المطاعم والكافيهات مع صورها وموقعها وأطباقها المميزة.'}
+            />
           )
         }
         renderItem={({ item }) => (
@@ -116,6 +111,35 @@ function AdminHome() {
         <Button title="إضافة مطعم" icon="plus" height={54} onPress={() => router.push('/admin/edit')} />
       </View>
     </View>
+  );
+}
+
+/** بطاقة رقم. إذا لها onPress تصير فلتر، وتتلوّن لما تكون مفعّلة */
+function StatBox({ label, value, active, onPress }: { label: string; value?: number; active?: boolean; onPress?: () => void }) {
+  return (
+    <Pressable
+      disabled={!onPress}
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={onPress ? { selected: !!active } : undefined}
+      accessibilityLabel={`${label}: ${value ?? 0}`}
+      style={({ pressed }) => ({
+        flex: 1,
+        backgroundColor: active ? colors.accentSoft : colors.surface,
+        borderWidth: 1,
+        borderColor: active ? colors.accent : colors.surface,
+        borderRadius: radius.md,
+        padding: 14,
+        opacity: pressed ? 0.8 : 1,
+      })}
+    >
+      <Txt size={13} color={active ? colors.accentDark : colors.muted} numberOfLines={1}>
+        {label}
+      </Txt>
+      <Txt weight="display" size={24} color={active ? colors.accent : colors.ink}>
+        {value === undefined ? '–' : ar(value)}
+      </Txt>
+    </Pressable>
   );
 }
 
