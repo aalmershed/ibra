@@ -9,9 +9,10 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DevSettings, I18nManager, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Intro } from '../components/Intro';
 import { SetupNotice } from '../components/SetupNotice';
 import { AuthProvider } from '../lib/auth';
 import { FavoritesProvider } from '../lib/favorites';
@@ -37,6 +38,9 @@ export default function RootLayout() {
     ReadexPro_600SemiBold,
     ReadexPro_700Bold,
   });
+
+  const [introDone, setIntroDone] = useState(false);
+  const finishIntro = useCallback(() => setIntroDone(true), []);
 
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync().catch(() => {});
@@ -65,6 +69,7 @@ export default function RootLayout() {
       ) : (
         <SetupNotice />
       )}
+      {!introDone ? <Intro onDone={finishIntro} /> : null}
     </SafeAreaProvider>
   );
 }
