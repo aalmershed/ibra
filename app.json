@@ -1,25 +1,77 @@
 {
   "expo": {
-    "name": "ibra",
+    "name": "IBRA",
     "slug": "ibra",
+    "scheme": "ibra",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.almershed.ibra",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "نستخدم موقعك عشان نعرض لك أقرب المطاعم والكافيهات.",
+        "NSPhotoLibraryUsageDescription": "نحتاج الوصول للصور عشان ترفع صور المطاعم والأطباق.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.almershed.ibra",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "config": {
+        "googleMaps": {
+          "apiKey": "ضع_مفتاح_خرائط_جوجل_هنا"
+        }
+      },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true,
+          "forcesRTL": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "نستخدم موقعك عشان نعرض لك أقرب المطاعم والكافيهات."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "نحتاج الوصول للصور عشان ترفع صور المطاعم والأطباق.",
+          "cameraPermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "supportsRTL": true,
+      "forcesRTL": true
+    },
+    "experiments": {
+      "typedRoutes": false
     }
   }
 }
