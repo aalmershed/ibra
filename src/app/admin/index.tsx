@@ -94,13 +94,11 @@ function AdminHome() {
               alignItems: 'center',
               gap: 12,
               padding: 10,
-              borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: colors.lineSoft,
-              backgroundColor: pressed ? colors.surface : colors.white,
+              borderRadius: radius.lg,
+              backgroundColor: pressed ? colors.lineSoft : colors.surface,
             })}
           >
-            <Photo uri={item.images[0]} tint={tintFor(item.id)} style={{ width: 56, height: 56, borderRadius: 12 }} iconSize={18} />
+            <Photo uri={item.images[0]} tint={tintFor(item.id)} style={{ width: 60, height: 60, borderRadius: 16 }} iconSize={18} />
             <View style={{ flex: 1 }}>
               <Txt weight="semibold" numberOfLines={1}>
                 {item.name}

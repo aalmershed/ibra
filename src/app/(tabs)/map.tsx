@@ -135,8 +135,8 @@ export default function MapScreen() {
               right: 0,
               bottom: 0,
               backgroundColor: colors.white,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
+              borderTopLeftRadius: radius.xl,
+              borderTopRightRadius: radius.xl,
               paddingHorizontal: 20,
               paddingTop: 10,
               paddingBottom: tabSpace - 4,
@@ -157,7 +157,7 @@ export default function MapScreen() {
             ) : null}
           </View>
           <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-            <Photo uri={selected.images[0]} tint={tintFor(selected.id)} style={{ width: 72, height: 72, borderRadius: 16 }} iconSize={22} />
+            <Photo uri={selected.images[0]} tint={tintFor(selected.id)} style={{ width: 76, height: 76, borderRadius: 20 }} iconSize={22} />
             <View style={{ flex: 1, gap: 2 }}>
               <Txt weight="semibold" size={16} numberOfLines={1}>
                 {selected.name}

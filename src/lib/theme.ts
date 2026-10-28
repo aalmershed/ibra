@@ -22,6 +22,12 @@ export const lightColors = {
   surface: '#F7F5F2',
   white: '#FFFFFF',
   mapBg: '#EEF0EB',
+  /** أزرار وشارات شبه شفافة فوق الصور والخريطة */
+  glass: 'rgba(255,255,255,0.86)',
+  /** شريط التبويبات العائم (عكس الخلفية) */
+  bar: '#1C1917',
+  barIcon: 'rgba(255,255,255,0.62)',
+  skeleton: '#EFECE9',
   success: '#15803D',
   danger: '#B91C1C',
   dangerSoft: '#F3C7C7',
@@ -55,6 +61,10 @@ export const darkColors: Colors = {
   surface: '#1E1B19',
   white: '#121010',
   mapBg: '#1E201D',
+  glass: 'rgba(30,27,25,0.82)',
+  bar: '#262220',
+  barIcon: 'rgba(245,242,239,0.55)',
+  skeleton: '#232020',
   success: '#4ADE80',
   danger: '#F87171',
   dangerSoft: '#5B2424',
@@ -72,7 +82,7 @@ export const fonts = {
   displayBold: 'ReadexPro_700Bold',
 };
 
-export const radius = { sm: 10, md: 14, lg: 20, xl: 24, pill: 999 };
+export const radius = { sm: 12, md: 16, lg: 24, xl: 32, pill: 999 };
 
 export const shadow = {
   shadowColor: '#1C1917',

@@ -59,7 +59,7 @@ export default function FavoritesScreen() {
       style={{ flex: 1, backgroundColor: colors.white }}
       data={visible}
       keyExtractor={(r) => r.id}
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: tabSpace, paddingHorizontal: 20, gap: 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: tabSpace, paddingHorizontal: 20, gap: 10 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -73,7 +73,9 @@ export default function FavoritesScreen() {
       }
       ListHeaderComponent={
         <View style={{ gap: 2, marginBottom: 6 }}>
-          <Title size={26}>المفضلة</Title>
+          <Title size={32} style={{ lineHeight: 44 }}>
+            المفضلة
+          </Title>
           {visible.length ? (
             <Txt color={colors.muted}>{ar(visible.length)} {visible.length > 10 || visible.length < 3 ? 'مكان' : 'أماكن'} محفوظة</Txt>
           ) : null}

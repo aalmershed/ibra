@@ -4,11 +4,11 @@ import { FlatList, RefreshControl, ScrollView, useWindowDimensions, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DishCard, FeaturedCard, RestaurantRow } from '../../components/cards';
 import { useTabBarSpace } from '../../components/TabBar';
-import { Button, Chip, EmptyState, IconButton, Loading, SearchBar, Title, Txt } from '../../components/ui';
+import { Button, Chip, EmptyState, FadeIn, Pressy, SearchBar, SectionTitle, Skeleton, Title, Txt } from '../../components/ui';
 import { fetchRecommendedDishes, fetchRestaurants } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { distanceKm, useUserLocation } from '../../lib/location';
-import { CATEGORIES } from '../../lib/theme';
+import { CATEGORIES, radius } from '../../lib/theme';
 import { useColors } from '../../lib/appearance';
 import type { DishWithRestaurant, Restaurant } from '../../lib/types';
 
@@ -26,6 +26,7 @@ export default function HomeScreen() {
   const [dishes, setDishes] = useState<DishWithRestaurant[]>([]);
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [slide, setSlide] = useState(0);
   const reqId = useRef(0);
 
   const load = useCallback(async () => {
@@ -68,6 +69,7 @@ export default function HomeScreen() {
   }, [restaurants, coords]);
   const filtering = category !== 'all' || search.trim().length > 0;
   const firstName = profile?.full_name?.split(' ')[0];
+  const cardWidth = width - 56;
 
   return (
     <ScrollView
@@ -76,20 +78,33 @@ export default function HomeScreen() {
       keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
     >
-      <View style={{ paddingHorizontal: 20, gap: 18 }}>
+      <View style={{ paddingHorizontal: 20, gap: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Txt weight="display" size={26} style={{ letterSpacing: 1, writingDirection: 'ltr' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Txt weight="display" size={24} style={{ letterSpacing: 1.5, writingDirection: 'ltr' }}>
               IBRA
             </Txt>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent, marginTop: 8 }} />
           </View>
-          <IconButton name="user" label="حسابي" bg={colors.surface} onPress={() => router.push(session ? '/account' : '/auth/login')} />
+          <Pressy
+            accessibilityLabel="حسابي"
+            onPress={() => router.push(session ? '/account' : '/auth/login')}
+            scaleTo={0.9}
+            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Txt weight="display" size={17} color={colors.accent}>
+              {(firstName ?? session?.user.email ?? '').charAt(0).toUpperCase() || '؟'}
+            </Txt>
+          </Pressy>
         </View>
 
-        <View style={{ gap: 2 }}>
-          <Title size={28}>{firstName ? `هلا ${firstName}، وش ناكل اليوم؟` : 'وش ناكل اليوم؟'}</Title>
-          <Txt color={colors.muted}>أفضل المطاعم والكافيهات، مختارة بعناية</Txt>
+        <View style={{ gap: 4 }}>
+          <Txt size={15} color={colors.muted}>
+            {greeting()}{firstName ? `، ${firstName}` : ''} 👋
+          </Txt>
+          <Title size={34} style={{ lineHeight: 46 }}>
+            وش ناكل اليوم؟
+          </Title>
         </View>
 
         <SearchBar value={search} onChangeText={setSearch} placeholder="ابحث عن مطعم، مطبخ، أو حي" />
@@ -102,7 +117,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {restaurants === null && !error ? (
-        <Loading />
+        <HomeSkeleton width={cardWidth} />
       ) : error ? (
         <EmptyState
           icon="wifi-off"
@@ -119,24 +134,32 @@ export default function HomeScreen() {
       ) : (
         <>
           {!filtering && featured.length > 0 ? (
-            <View style={{ paddingTop: 26, gap: 12 }}>
-              <Title style={{ paddingHorizontal: 20 }}>اختيارات IBRA</Title>
+            <View style={{ paddingTop: 28, gap: 14 }}>
+              <SectionTitle title="اختيارات IBRA" subtitle="أماكن جربناها ونرشحها لك" />
               <FlatList
                 horizontal
                 data={featured}
                 keyExtractor={(r) => r.id}
                 showsHorizontalScrollIndicator={false}
-                snapToInterval={width - 40 + 14}
+                snapToInterval={cardWidth + 12}
                 decelerationRate="fast"
-                contentContainerStyle={{ paddingHorizontal: 20, gap: 14 }}
-                renderItem={({ item }) => <FeaturedCard restaurant={item} km={km(item)} width={featured.length > 1 ? width - 60 : width - 40} />}
+                onMomentumScrollEnd={(e) => setSlide(Math.round(Math.abs(e.nativeEvent.contentOffset.x) / (cardWidth + 12)))}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                renderItem={({ item }) => <FeaturedCard restaurant={item} km={km(item)} width={featured.length > 1 ? cardWidth : width - 40} />}
               />
+              {featured.length > 1 ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6 }}>
+                  {featured.map((r, i) => (
+                    <View key={r.id} style={{ width: i === slide ? 22 : 6, height: 6, borderRadius: 3, backgroundColor: i === slide ? colors.ink : colors.line }} />
+                  ))}
+                </View>
+              ) : null}
             </View>
           ) : null}
 
           {!filtering && dishes.length > 0 ? (
-            <View style={{ paddingTop: 28, gap: 12 }}>
-              <Title style={{ paddingHorizontal: 20 }}>أطباق لازم تجربها</Title>
+            <View style={{ paddingTop: 30, gap: 14 }}>
+              <SectionTitle title="أطباق لازم تجربها" subtitle="الأعلى تقييماً هالأسبوع" />
               <FlatList
                 horizontal
                 data={dishes}
@@ -148,14 +171,44 @@ export default function HomeScreen() {
             </View>
           ) : null}
 
-          <View style={{ paddingTop: 28, paddingHorizontal: 20, gap: 16 }}>
-            <Title>{filtering ? 'النتائج' : coords ? 'قريب منك' : 'كل الأماكن'}</Title>
-            {others.map((r) => (
-              <RestaurantRow key={r.id} restaurant={r} km={km(r)} />
-            ))}
+          <View style={{ paddingTop: 30, gap: 14 }}>
+            <SectionTitle title={filtering ? 'النتائج' : coords ? 'قريب منك' : 'كل الأماكن'} />
+            <View style={{ paddingHorizontal: 20, gap: 10 }}>
+              {others.map((r, i) => (
+                <FadeIn key={r.id} index={i}>
+                  <RestaurantRow restaurant={r} km={km(r)} />
+                </FadeIn>
+              ))}
+            </View>
           </View>
         </>
       )}
     </ScrollView>
+  );
+}
+
+/** تحية حسب وقت اليوم */
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'صباح الخير';
+  if (h < 17) return 'يومك سعيد';
+  return 'مساء الخير';
+}
+
+/** شكل الصفحة وقت التحميل */
+function HomeSkeleton({ width }: { width: number }) {
+  return (
+    <View style={{ paddingTop: 28, gap: 14 }}>
+      <Skeleton style={{ marginHorizontal: 20, width: 160, height: 24, borderRadius: 8 }} />
+      <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20 }}>
+        <Skeleton style={{ width, height: 380, borderRadius: radius.xl }} />
+        <Skeleton style={{ width: 40, height: 380, borderRadius: radius.xl }} />
+      </View>
+      <View style={{ paddingHorizontal: 20, gap: 10, paddingTop: 16 }}>
+        {[0, 1].map((i) => (
+          <Skeleton key={i} style={{ height: 108, borderRadius: radius.lg }} />
+        ))}
+      </View>
+    </View>
   );
 }

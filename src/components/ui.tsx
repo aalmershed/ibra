@@ -1,10 +1,11 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -57,6 +58,48 @@ export function Title({ children, size = 19, style }: { children: ReactNode; siz
 
 // ---------------- الأزرار ----------------
 
+// ---------------- الضغط ----------------
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/** زر عام ينضغط بحركة تصغير ناعمة (يحس كأنه ينضغط فعلاً) */
+export function Pressy({
+  onPress,
+  disabled,
+  style,
+  scaleTo = 0.96,
+  children,
+  ...a11y
+}: {
+  onPress?: () => void;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  scaleTo?: number;
+  children: ReactNode;
+  accessibilityLabel?: string;
+  accessibilityRole?: 'button' | 'link' | 'tab' | 'radio';
+  accessibilityHint?: string;
+  accessibilityState?: { selected?: boolean; disabled?: boolean; busy?: boolean; checked?: boolean };
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const to = (v: number) => Animated.spring(scale, { toValue: v, damping: 15, stiffness: 320, mass: 0.6, useNativeDriver: true }).start();
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      {...a11y}
+      onPress={onPress}
+      disabled={disabled}
+      onPressIn={() => to(scaleTo)}
+      onPressOut={() => to(1)}
+      style={[style, { transform: [{ scale }] }]}
+    >
+      {children}
+    </AnimatedPressable>
+  );
+}
+
+// ---------------- الأزرار ----------------
+
 type ButtonVariant = 'primary' | 'outline' | 'soft' | 'dark' | 'danger';
 
 export function Button({
@@ -67,7 +110,7 @@ export function Button({
   loading,
   disabled,
   style,
-  height = 52,
+  height = 54,
 }: {
   title: string;
   onPress?: () => void;
@@ -82,22 +125,18 @@ export function Button({
   const v = {
     primary: { bg: colors.accentFill, fg: colors.onAccent, border: colors.accentFill },
     dark: { bg: colors.ink, fg: colors.white, border: colors.ink },
-    outline: { bg: colors.white, fg: colors.ink, border: colors.line },
+    outline: { bg: colors.surface, fg: colors.ink, border: colors.surface },
     soft: { bg: colors.accentSoft, fg: colors.accentDark, border: colors.accentSoft },
     danger: { bg: colors.white, fg: colors.danger, border: colors.dangerSoft },
   }[variant];
   const off = disabled || loading;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Pressy
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       onPress={onPress}
       disabled={off}
-      style={({ pressed }) => [
-        styles.button,
-        { height, backgroundColor: v.bg, borderColor: v.border, opacity: off ? 0.6 : pressed ? 0.85 : 1 },
-        style,
-      ]}
+      scaleTo={0.97}
+      style={[styles.button, { height, borderRadius: height / 2, backgroundColor: v.bg, borderColor: v.border, opacity: off ? 0.55 : 1 }, style]}
     >
       {loading ? (
         <ActivityIndicator color={v.fg} />
@@ -109,7 +148,7 @@ export function Button({
           </Txt>
         </>
       )}
-    </Pressable>
+    </Pressy>
   );
 }
 
@@ -136,120 +175,141 @@ export function IconButton({
   const fg = color ?? colors.ink;
   const background = bg ?? colors.white;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Pressy
       accessibilityLabel={label}
       onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => [
-        {
-          width: size,
-          height: size,
-          borderRadius: size >= 48 ? radius.md : size / 2,
-          backgroundColor: background,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: bordered ? 1 : 0,
-          borderColor: colors.line,
-          opacity: pressed ? 0.75 : 1,
-        },
-      ]}
+      scaleTo={0.9}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: bordered ? colors.surface : background,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       <Icon name={name} color={fg} size={iconSize} />
-    </Pressable>
+    </Pressy>
   );
 }
 
-export function HeartButton({ active, onPress, size = 44 }: { active: boolean; onPress: () => void; size?: number }) {
+/** زر المفضلة: القلب ينبض لما ينحفظ */
+export function HeartButton({ active, onPress, size = 44, bg }: { active: boolean; onPress: () => void; size?: number; bg?: string }) {
   const colors = useColors();
+  const pop = useRef(new Animated.Value(1)).current;
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (active) {
+      pop.setValue(0.6);
+      Animated.spring(pop, { toValue: 1, damping: 7, stiffness: 260, useNativeDriver: true }).start();
+    }
+  }, [active, pop]);
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Pressy
       accessibilityLabel={active ? 'إزالة من المفضلة' : 'حفظ في المفضلة'}
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => [
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1 },
-      ]}
+      scaleTo={0.88}
+      style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg ?? colors.white, alignItems: 'center', justifyContent: 'center' }}
     >
-      <Text style={{ fontSize: size * 0.42, color: active ? colors.accent : colors.ink, lineHeight: size * 0.52 }}>
+      <Animated.Text style={{ fontSize: size * 0.44, color: active ? colors.accent : colors.ink, lineHeight: size * 0.54, transform: [{ scale: pop }] }}>
         {active ? '♥' : '♡'}
-      </Text>
-    </Pressable>
+      </Animated.Text>
+    </Pressy>
   );
 }
 
 export function Chip({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
   const colors = useColors();
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Pressy
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        { borderColor: colors.line, backgroundColor: colors.white },
-        active ? { backgroundColor: colors.ink, borderColor: colors.ink } : null,
-        { opacity: pressed ? 0.8 : 1 },
-      ]}
+      scaleTo={0.94}
+      style={[styles.chip, { backgroundColor: active ? colors.ink : colors.surface }]}
     >
-      <Txt weight={active ? 'medium' : 'regular'} size={14} color={active ? colors.white : colors.ink}>
+      <Txt weight={active ? 'semibold' : 'medium'} size={14} color={active ? colors.white : colors.ink}>
         {label}
       </Txt>
-    </Pressable>
+    </Pressy>
   );
 }
 
 // ---------------- الحقول ----------------
 
-export function Field({ label, hint, ltr, style, multiline, ...rest }: TextInputProps & { label: string; hint?: string; ltr?: boolean }) {
+export function Field({
+  label,
+  hint,
+  ltr,
+  style,
+  multiline,
+  onFocus,
+  onBlur,
+  ...rest
+}: TextInputProps & { label: string; hint?: string; ltr?: boolean }) {
   const colors = useColors();
-  {
-    return (
-      <View style={{ gap: 6 }}>
-        <Txt weight="medium" size={14}>
-          {label}
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={{ gap: 8 }}>
+      <Txt weight="medium" size={14} color={colors.muted}>
+        {label}
+      </Txt>
+      <TextInput
+        accessibilityLabel={label}
+        placeholderTextColor={colors.placeholder}
+        multiline={multiline}
+        selectionColor={colors.accent}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        {...rest}
+        style={[
+          styles.input,
+          // حقل معبّى بدون إطار، ويتلوّن إطاره بالبرتقالي وقت الكتابة
+          { borderColor: focused ? colors.accent : colors.surface, backgroundColor: focused ? colors.white : colors.surface, color: colors.ink },
+          multiline ? { height: 110, paddingTop: 14, textAlignVertical: 'top' } : null,
+          // اتجاه الكتابة صريح لأن محاذاة الحقول ما تنقلب تلقائياً مع RTL
+          { textAlign: 'right', writingDirection: ltr ? 'ltr' : 'rtl' },
+          style,
+        ]}
+      />
+      {hint ? (
+        <Txt size={12} color={colors.muted}>
+          {hint}
         </Txt>
-        <TextInput
-          accessibilityLabel={label}
-          placeholderTextColor={colors.placeholder}
-          multiline={multiline}
-          {...rest}
-          style={[
-            styles.input,
-            { borderColor: colors.inputBorder, backgroundColor: colors.white, color: colors.ink },
-            multiline ? { height: 96, paddingTop: 12, textAlignVertical: 'top' } : null,
-            // اتجاه الكتابة صريح لأن محاذاة الحقول ما تنقلب تلقائياً مع RTL
-            { textAlign: 'right', writingDirection: ltr ? 'ltr' : 'rtl' },
-            style,
-          ]}
-        />
-        {hint ? (
-          <Txt size={12} color={colors.muted}>
-            {hint}
-          </Txt>
-        ) : null}
-      </View>
-    );
-  }
+      ) : null}
+    </View>
+  );
 }
 
 export function SearchBar({ value, onChangeText, placeholder }: { value: string; onChangeText: (t: string) => void; placeholder: string }) {
   const colors = useColors();
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={[styles.search, { backgroundColor: colors.surface }]}>
-      <Icon name="search" size={20} color={colors.muted} />
+    <View style={[styles.search, { backgroundColor: focused ? colors.white : colors.surface, borderColor: focused ? colors.accent : colors.surface }]}>
+      <Icon name="search" size={20} color={focused ? colors.accent : colors.muted} />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={colors.placeholder}
+        selectionColor={colors.accent}
         accessibilityLabel="بحث"
         returnKeyType="search"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         style={{ flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, paddingVertical: 0, textAlign: 'right', writingDirection: 'rtl' }}
       />
-      {value ? <IconButton name="x" label="مسح البحث" size={32} bg="transparent" iconSize={18} color={colors.muted} onPress={() => onChangeText('')} /> : null}
+      {value ? <IconButton name="x" label="مسح البحث" size={30} bg={colors.line} iconSize={15} color={colors.ink} onPress={() => onChangeText('')} /> : null}
     </View>
   );
 }
@@ -393,6 +453,70 @@ export function Toast({ message, bottom }: { message: ToastMessage | null; botto
   );
 }
 
+/** تدرّج غامق من تحت فوق الصور، عشان النص الأبيض يكون واضح */
+export function Scrim({ height = '70%', strength = 0.78 }: { height?: `${number}%` | number; strength?: number }) {
+  const steps = 36;
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height }}>
+      {Array.from({ length: steps }).map((_, i) => (
+        <View key={i} style={{ flex: 1, backgroundColor: '#000', opacity: strength * Math.pow((i + 1) / steps, 2.2) }} />
+      ))}
+    </View>
+  );
+}
+
+/** مربع رمادي ينبض مكان المحتوى وقت التحميل */
+export function Skeleton({ style }: { style?: StyleProp<ViewStyle> }) {
+  const colors = useColors();
+  const pulse = useRef(new Animated.Value(0.55)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.55, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+  return <Animated.View style={[{ backgroundColor: colors.skeleton, borderRadius: radius.md, opacity: pulse }, style]} />;
+}
+
+/** يظهر المحتوى بحركة طلوع خفيفة. `index` يأخّر كل عنصر شوي عن اللي قبله */
+export function FadeIn({ index = 0, children, style }: { index?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(v, { toValue: 1, duration: 420, delay: Math.min(index, 8) * 60, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v, index]);
+  return (
+    <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/** عنوان قسم مع زر اختياري على الطرف الثاني */
+export function SectionTitle({ title, subtitle, action, onAction }: { title: string; subtitle?: string; action?: string; onAction?: () => void }) {
+  const colors = useColors();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 20, gap: 12 }}>
+      <View style={{ flex: 1 }}>
+        <Title size={21}>{title}</Title>
+        {subtitle ? (
+          <Txt size={13} color={colors.muted}>
+            {subtitle}
+          </Txt>
+        ) : null}
+      </View>
+      {action ? (
+        <Txt size={14} weight="semibold" color={colors.accent} onPress={onAction} accessibilityRole="button">
+          {action}
+        </Txt>
+      ) : null}
+    </View>
+  );
+}
+
 export function Loading() {
   const colors = useColors();
   return (
@@ -404,37 +528,36 @@ export function Loading() {
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: radius.md,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingHorizontal: 18,
+    paddingHorizontal: 22,
   },
   chip: {
-    height: 38,
+    height: 40,
     paddingHorizontal: 18,
-    borderRadius: 19,
-    borderWidth: 1,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   input: {
-    height: 50,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1,
+    height: 54,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
     fontFamily: fonts.regular,
     fontSize: 15,
   },
   search: {
-    height: 50,
-    borderRadius: radius.md,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
   header: {
     flexDirection: 'row',

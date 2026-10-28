@@ -22,20 +22,20 @@ export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarPr
   const bottom = Math.max(insets.bottom, 12) + 8;
 
   return (
-    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { top: undefined, height: bottom + 96 }]}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: bottom + 96 }}>
       <BottomFade />
       <View
         accessibilityRole="tablist"
         style={[
           {
             position: 'absolute',
-            left: 16,
-            right: 16,
+            left: 20,
+            right: 20,
             bottom,
-            height: 64,
-            borderRadius: 32,
-            backgroundColor: colors.white,
-            paddingHorizontal: 8,
+            height: 66,
+            borderRadius: 33,
+            backgroundColor: colors.bar,
+            paddingHorizontal: 9,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -94,7 +94,8 @@ function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconN
       accessibilityLabel={label}
       accessibilityState={{ selected: focused }}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      // overflow مخفي عشان عنصر قياس الاسم ما يطلع برا الشاشة
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, overflow: 'hidden', borderRadius: 24 })}
     >
       <Animated.View
         style={{
@@ -103,20 +104,20 @@ function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconN
           flexDirection: 'row',
           alignItems: 'center',
           paddingHorizontal: progress.interpolate({ inputRange: [0, 1], outputRange: [15.5, 18] }),
-          backgroundColor: progress.interpolate({ inputRange: [0, 1], outputRange: [colors.accentSoftClear, colors.accentSoft] }),
+          backgroundColor: progress.interpolate({ inputRange: [0, 1], outputRange: ['rgba(194,65,12,0)', colors.accentFill] }),
         }}
       >
         <Animated.View style={{ transform: [{ scale }] }}>
-          <Icon name={icon} size={focused ? 21 : 23} color={focused ? colors.accent : colors.muted} />
+          <Icon name={icon} size={focused ? 20 : 22} color={focused ? colors.onAccent : colors.barIcon} />
         </Animated.View>
         <Animated.View
           style={{
             overflow: 'hidden',
             opacity: progress.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0.4, 1], extrapolate: 'clamp' }),
-            width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, labelWidth + 8], extrapolateLeft: 'clamp' }),
+            width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, labelWidth + 14], extrapolateLeft: 'clamp' }),
           }}
         >
-          <Txt weight="semibold" size={14} color={colors.accent} numberOfLines={1} style={{ width: labelWidth, marginStart: 8 }}>
+          <Txt weight="semibold" size={14} color={colors.onAccent} numberOfLines={1} ellipsizeMode="clip" style={{ width: labelWidth + 6, marginStart: 8 }}>
             {label}
           </Txt>
         </Animated.View>
@@ -134,5 +135,5 @@ function TabItem({ label, icon, focused, onPress }: { label: string; icon: IconN
 /** المسافة اللي تحتاجها الشاشات تحت المحتوى عشان ما يغطيه الشريط */
 export function useTabBarSpace() {
   const insets = useSafeAreaInsets();
-  return Math.max(insets.bottom, 12) + 8 + 64 + 24;
+  return Math.max(insets.bottom, 12) + 8 + 66 + 24;
 }

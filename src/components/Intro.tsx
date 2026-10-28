@@ -41,20 +41,20 @@ export function Intro({ onDone }: { onDone: () => void }) {
           letters.forEach((l) => l.setValue(1));
           run = Animated.sequence([Animated.delay(500), Animated.timing(exit, { toValue: 1, duration: 250, useNativeDriver: true })]);
         } else {
-          run = Animated.sequence([
-            Animated.parallel([
-              Animated.timing(dot, { toValue: 1, duration: 420, easing: Easing.bezier(0.2, 0.9, 0.25, 1), useNativeDriver: true }),
-              Animated.stagger(
-                65,
-                letters.map((l) => Animated.spring(l, { toValue: 1, delay: 120, damping: 13, stiffness: 190, mass: 0.8, useNativeDriver: true })),
-              ),
-            ]),
+          // الحركات تشتغل بالتوازي، والاختفاء له وقت ثابت عشان المدة ما تطول لو النوابض تأخرت تستقر
+          Animated.parallel([
+            Animated.timing(dot, { toValue: 1, duration: 420, easing: Easing.bezier(0.2, 0.9, 0.25, 1), useNativeDriver: true }),
+            Animated.stagger(
+              65,
+              letters.map((l) => Animated.spring(l, { toValue: 1, delay: 120, damping: 14, stiffness: 200, mass: 0.8, useNativeDriver: true })),
+            ),
             Animated.sequence([
+              Animated.delay(700),
               Animated.timing(dotPop, { toValue: 1.45, duration: 110, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-              Animated.spring(dotPop, { toValue: 1, damping: 8, stiffness: 260, useNativeDriver: true }),
+              Animated.spring(dotPop, { toValue: 1, damping: 9, stiffness: 280, useNativeDriver: true }),
             ]),
-            Animated.timing(exit, { toValue: 1, duration: 280, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          ]);
+          ]).start();
+          run = Animated.sequence([Animated.delay(1050), Animated.timing(exit, { toValue: 1, duration: 280, easing: Easing.in(Easing.quad), useNativeDriver: true })]);
         }
         run.start(({ finished }) => finished && onDone());
       });
