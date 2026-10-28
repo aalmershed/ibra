@@ -55,6 +55,7 @@ export default function RootLayout() {
               <Stack.Screen name="restaurant/[id]" />
               <Stack.Screen name="auth/login" options={{ presentation: 'modal' }} />
               <Stack.Screen name="auth/register" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="profile" />
               <Stack.Screen name="admin/index" />
               <Stack.Screen name="admin/edit" />
               <Stack.Screen name="admin/dish" />

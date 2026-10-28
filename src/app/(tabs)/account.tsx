@@ -115,6 +115,8 @@ export default function AccountScreen() {
       ) : null}
 
       <View style={{ borderWidth: 1, borderColor: colors.lineSoft, borderRadius: radius.lg, overflow: 'hidden' }}>
+        <Row icon="edit-3" label="تعديل الملف الشخصي" onPress={() => router.push('/profile')} />
+        <View style={{ height: 1, backgroundColor: colors.lineSoft, marginHorizontal: 16 }} />
         <Row icon="heart" label="المفضلة" onPress={() => router.navigate('/favorites')} />
         <View style={{ height: 1, backgroundColor: colors.lineSoft, marginHorizontal: 16 }} />
         <Row icon="map" label="المطاعم القريبة" onPress={() => router.navigate('/map')} />

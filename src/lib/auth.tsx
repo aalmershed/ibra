@@ -11,6 +11,7 @@ type AuthState = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (fullName: string, email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
+  updateProfile: (fullName: string, email: string) => Promise<{ emailPending: boolean }>;
   refreshProfile: () => Promise<void>;
 };
 
@@ -23,10 +24,11 @@ export function authErrorMessage(message: string): string {
   if (m.includes('already registered') || m.includes('already been registered')) return 'هذا البريد مسجّل من قبل. جرّب تسجيل الدخول.';
   if (m.includes('email not confirmed')) return 'فعّل حسابك من الرسالة اللي وصلت بريدك أولاً.';
   if (m.includes('password should be')) return 'كلمة المرور لازم تكون ٦ أحرف أو أكثر.';
-  if (m.includes('invalid email') || m.includes('unable to validate email')) return 'صيغة البريد الإلكتروني غير صحيحة.';
+  if (m.includes('invalid email') || m.includes('unable to validate email') || (m.includes('email') && m.includes('is invalid'))) return 'صيغة البريد الإلكتروني غير صحيحة.';
   if (m.includes('network') || m.includes('fetch')) return 'تأكد من اتصالك بالإنترنت وحاول مرة ثانية.';
   if (m.includes('rate limit')) return 'محاولات كثيرة. انتظر شوي وحاول مرة ثانية.';
-  return 'صار خطأ غير متوقع. حاول مرة ثانية.';
+  // نعرض الرسالة الأصلية تحت عشان يسهل نعرف السبب
+  return `صار خطأ غير متوقع. حاول مرة ثانية.\n(${message})`;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -78,6 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         await supabase.auth.signOut();
+      },
+      updateProfile: async (fullName, email) => {
+        const user = session?.user;
+        if (!user) throw new Error('سجّل دخولك أولاً.');
+        const name = fullName.trim();
+        const { error: nameError } = await supabase.from('profiles').update({ full_name: name }).eq('id', user.id);
+        if (nameError) throw new Error(authErrorMessage(nameError.message));
+
+        const newEmail = email.trim().toLowerCase();
+        const emailChanged = newEmail !== (user.email ?? '').toLowerCase();
+        const { data, error } = await supabase.auth.updateUser({ data: { full_name: name }, ...(emailChanged ? { email: newEmail } : {}) });
+        await loadProfile(user.id);
+        if (error) throw new Error(authErrorMessage(error.message));
+        // إذا تأكيد الإيميل شغّال في Supabase، الإيميل ما يتغير لين يضغط رابط التأكيد
+        return { emailPending: emailChanged && data.user?.email?.toLowerCase() !== newEmail };
       },
       refreshProfile: () => loadProfile(session?.user.id),
     }),
