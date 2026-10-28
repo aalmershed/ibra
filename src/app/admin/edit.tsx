@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminGuard } from '../../components/AdminGuard';
 import { Button, Chip, Field, Icon, IconButton, Loading, Photo, ScreenHeader, Title, Txt } from '../../components/ui';
 import { deleteRestaurant, fetchDishes, fetchRestaurant, saveRestaurant, uploadImage } from '../../lib/api';
+import { setFlash } from '../../lib/flash';
 import { formatPrice, toLatinDigits } from '../../lib/format';
 import { RIYADH, useUserLocation, type Coords } from '../../lib/location';
 import { pickImages, type PickedImage } from '../../lib/pickImage';
@@ -112,12 +113,10 @@ function EditRestaurant() {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setId(saved.id);
         setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(dishesY.current - 12, 0), animated: true }), 350);
-      } else if (isNew) {
-        Alert.alert('تم النشر 🎉', dishes.length ? 'انضاف المطعم وأطباقه، وصار يظهر في التطبيق.' : 'انضاف المطعم، وصار يظهر في التطبيق.', [
-          { text: 'تمام', onPress: () => router.back() },
-        ]);
       } else {
-        Alert.alert('تم الحفظ', 'انحفظت التعديلات.');
+        // نرجع لقائمة المطاعم مباشرة، والإشعار يطلع هناك
+        setFlash(isNew ? 'تم النشر 🎉' : 'انحفظت التعديلات');
+        router.back();
       }
     } catch (e) {
       Alert.alert('ما قدرنا نحفظ', (e as Error).message);
@@ -136,6 +135,7 @@ function EditRestaurant() {
         onPress: async () => {
           try {
             await deleteRestaurant(id);
+            setFlash('انحذف المطعم');
             router.back();
           } catch (e) {
             Alert.alert('ما قدرنا نحذف', (e as Error).message);

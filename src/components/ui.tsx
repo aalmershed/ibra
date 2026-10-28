@@ -1,9 +1,10 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { type ComponentProps, type ReactNode } from 'react';
+import { useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -326,6 +327,49 @@ export function EmptyState({ icon, title, body, action }: { icon: IconName; titl
       ) : null}
       {action ? <View style={{ marginTop: 8, alignSelf: 'stretch' }}>{action}</View> : null}
     </View>
+  );
+}
+
+export type ToastMessage = { text: string; id: number };
+
+/** إشعار صغير يطلع من تحت ويختفي لحاله بعد ثانيتين */
+export function Toast({ message, bottom }: { message: ToastMessage | null; bottom: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!message) return;
+    anim.setValue(0);
+    const run = Animated.sequence([
+      Animated.spring(anim, { toValue: 1, damping: 14, stiffness: 160, useNativeDriver: true }),
+      Animated.delay(2000),
+      Animated.timing(anim, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]);
+    run.start();
+    return () => run.stop();
+  }, [message, anim]);
+
+  if (!message) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      style={{
+        position: 'absolute',
+        left: 20,
+        right: 20,
+        bottom,
+        alignItems: 'center',
+        opacity: anim,
+        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.ink, borderRadius: radius.pill, paddingVertical: 12, paddingHorizontal: 18 }}>
+        <Icon name="check-circle" size={18} color={colors.white} />
+        <Txt weight="semibold" size={14} color={colors.white}>
+          {message.text}
+        </Txt>
+      </View>
+    </Animated.View>
   );
 }
 

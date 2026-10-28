@@ -3,8 +3,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminGuard } from '../../components/AdminGuard';
-import { Button, EmptyState, Icon, Loading, Photo, ScreenHeader, SearchBar, Txt } from '../../components/ui';
+import { Button, EmptyState, Icon, Loading, Photo, ScreenHeader, SearchBar, Toast, Txt, type ToastMessage } from '../../components/ui';
 import { fetchMemberCount, fetchRestaurants } from '../../lib/api';
+import { takeFlash } from '../../lib/flash';
 import { ar } from '../../lib/format';
 import { categoryLabel, colors, radius, tintFor } from '../../lib/theme';
 import type { Restaurant } from '../../lib/types';
@@ -15,6 +16,7 @@ function AdminHome() {
   const [members, setMembers] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -29,6 +31,8 @@ function AdminHome() {
   useFocusEffect(
     useCallback(() => {
       load();
+      const flash = takeFlash();
+      if (flash) setToast({ text: flash, id: Date.now() });
     }, [load]),
   );
 
@@ -107,6 +111,7 @@ function AdminHome() {
           </Pressable>
         )}
       />
+      <Toast message={toast} bottom={insets.bottom + 104} />
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20, paddingBottom: insets.bottom + 16, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.lineSoft }}>
         <Button title="إضافة مطعم" icon="plus" height={54} onPress={() => router.push('/admin/edit')} />
       </View>
